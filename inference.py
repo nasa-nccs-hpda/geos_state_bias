@@ -78,11 +78,11 @@ def get_levs(nlev) -> np.ndarray:
     levs_norm = (levs-1.0)/180.0
     return levs_norm
 
-def gen_filename(prog_file):
+def gen_filename(current_time, prog_file):
     base_name = os.path.basename(prog_file)
     base_name = base_name.replace("prog", "iau")
-    ct_stamp = ct.astype("datetime64[us]").item().strftime("%Y%m%d_%H%Mz")
-    nt_stamp = (ct + np.timedelta64(3, 'h')).astype("datetime64[us]").item().strftime("%Y%m%d_%H%Mz")
+    ct_stamp = current_time.astype("datetime64[us]").item().strftime("%Y%m%d_%H%Mz")
+    nt_stamp = (current_time + np.timedelta64(3, 'h')).astype("datetime64[us]").item().strftime("%Y%m%d_%H%Mz")
     base_name = base_name.replace(ct_stamp, nt_stamp)
     return base_name
 
@@ -122,7 +122,7 @@ def main(prog_file, output_path):
     # Init output xr.dataset
     ct = prog_scaled.time.values[0]
     ds_out = create_ds(ct, levs)
-    out_fn = gen_filename(prog_file)
+    out_fn = gen_filename(ct, prog_file)
     out_file = os.path.join(output_path, out_fn)
     for nz in levs:
         lev_scaled = get_levs(nz)
