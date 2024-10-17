@@ -55,6 +55,9 @@ def norm_prog(prog_file: str) -> xr.Dataset:
         prog_scaled[var] = (prog_data[var]-mins[var])/(maxs[var]-mins[var])
     return prog_scaled
 
+def scale_iau(predicts, min=-0.0036053888, max=0.0027486791):
+    return predicts*(max-min)+min
+
 def get_xys() -> np.ndarray:
     """
     return:
@@ -73,6 +76,14 @@ def get_levs(nlev) -> np.ndarray:
     levs = np.ones((181, 360))*nlev
     levs_norm = (levs-1.0)/180.0
     return levs_norm
+
+def gen_filename(prog_file):
+    base_name = os.path.basename(prog_file)
+    base_name = base_name.replace("prog", "iau")
+    ct_stamp = ct.astype("datetime64[us]").item().strftime("%Y%m%d_%H%Mz")
+    nt_stamp = (ct + np.timedelta64(3, 'h')).astype("datetime64[us]").item().strftime("%Y%m%d_%H%Mz")
+    base_name = base_name.replace(ct_stamp, nt_stamp)
+    return base_name
 
 def pred(nlev, X):
     root = "./checkpoints/batch_2"
@@ -110,12 +121,8 @@ def main(prog_file, output_path):
     # Init output xr.dataset
     ct = prog_scaled.time.values[0]
     ds_out = create_ds(ct, levs)
-    base_name = os.path.basename(prog_file)
-    base_name = base_name.replace("prog", "iau")
-    ct_stamp = ct.astype("datetime64[us]").item().strftime("%Y%m%d_%H%Mz")
-    nt_stamp = (ct + np.timedelta64(3, 'h')).astype("datetime64[us]").item().strftime("%Y%m%d_%H%Mz")
-    base_name = base_name.replace(ct_stamp, nt_stamp)
-    out_file = os.path.join(output_path, base_name)
+    out_fn = gen_filename(prog_file)
+    out_file = os.path.join(output_path, out_fn)
     for nz in levs:
         lev_scaled = get_levs(nz)
         arrays = [prog_scaled[v].isel(lev=(nz-1)).to_numpy().squeeze() for v in prog_vars]
@@ -125,6 +132,7 @@ def main(prog_file, output_path):
         tlist = geos_dataset.split_tensor(input_img, tile_size=180, xoffset=90)
         input_img = torch.stack(tlist, dim=0)
         y_hat = pred(nz, input_img)
+        y_hat = scale_iau(y_hat)
         
         ds_out['DTDTML'].loc[dict(lev=nz)] = np.expand_dims(y_hat, axis=0)
     ds_out.to_netcdf(path=out_file) 
