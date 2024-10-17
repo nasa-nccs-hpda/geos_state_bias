@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import os
 from models.SmaAt_UNet import SmaAt_UNet
-form util.data_geos import geos_dataset
+from utils.data_geos import geos_dataset
 import argparse
 
 def re_build_pred(arrs):
@@ -21,6 +21,7 @@ def re_build_pred(arrs):
 
 def create_ds(current_time, levels):
     time = current_time + np.timedelta64(3, 'h')
+    print(time)
     lat = np.linspace(-90, 90, 181)  # 181 steps
     lon = np.linspace(-180, 179, 360)  # 360 steps
     lev = np.array(levels)
@@ -34,7 +35,7 @@ def create_ds(current_time, levels):
             "DTDTML": (["time", "lev", "lat", "lon"], dtdtml)
         },
         coords={
-            "time": time,
+	    "time": [time],
             "lat": lat,
             "lon": lon,
             "lev": lev
@@ -44,7 +45,8 @@ def create_ds(current_time, levels):
 
 def norm_prog(prog_file: str) -> xr.Dataset:
     prog_vars = ['U', 'V', 'T', 'QV', 'QI', 'QL', 'QG', 'QR', 'QS', 'PS']
-    prog_data = xr.open_dataset(prog_file, preprocess=lambda ds: ds[prog_vars])              
+    prog_data = xr.open_dataset(prog_file)
+    prog_data = prog_data[prog_vars]
     maxs = prog_data.map(np.max)
     mins = prog_data.map(np.min)
     
@@ -74,9 +76,10 @@ def get_levs(nlev) -> np.ndarray:
 
 def pred(nlev, X):
     root = "./checkpoints/batch_2"
-    ckpt_name = f"model_{nlev}"
-    if not os.path.isfile(os.path.join(rootm, ckpt_name)):
-        raise FileNotFoundError(f"Checkpoint not found: {os.path.join(rootm, ckpt_name)}")
+    ckpt_name = f"model_{nlev}.pt"
+    ckpt_path = os.path.join(root, ckpt_name)
+    if not os.path.isfile(ckpt_path):
+        raise FileNotFoundError(f"Checkpoint not found: {ckpt_path}")
     checkpoint = torch.load(ckpt_path, map_location=torch.device('cpu'))
     model = SmaAt_UNet(
         n_channels=13,
@@ -115,11 +118,12 @@ def main(prog_file, output_path):
         vx = np.stack(arrays, axis=0)
         input_img = torch.Tensor(vx)
         tlist = geos_dataset.split_tensor(input_img, tile_size=180, xoffset=90)
-        input_img = toch.stack(tlist, dim=0)
+        input_img = torch.stack(tlist, dim=0)
         y_hat = pred(nz, input_img)
         
-        ds_out['DTDTML'].loc[dict(lev=nz)] = np.expand_dims(y_hat, axis=(0,1))
-
+        ds_out['DTDTML'].loc[dict(lev=nz)] = np.expand_dims(y_hat, axis=0)
+    print("OK")
+    exit()
     return
 
 if __name__ == "__main__":
