@@ -5,6 +5,7 @@ import os
 from models.SmaAt_UNet import SmaAt_UNet
 from utils.data_geos import geos_dataset
 import argparse
+import time
 
 def re_build_pred(arrs):
     offset = 90
@@ -139,13 +140,14 @@ def main(prog_file, output_path):
     return
 
 if __name__ == "__main__":
+    start_time = time.time()
     # Set up argument prser
     parser = argparse.ArgumentParser(description='Predict State Bias')
     parser.add_argument(
         '--prog_file',
         type=str,
         default=None,
-        help='Absolute Path to prognosis file'
+        help='Absolute Path to prognostic file'
     )
     parser.add_argument(
         '--output_path',
@@ -157,3 +159,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(args.prog_file, args.output_path)
+    print("Single Prog prediction in %s mins"%((time.time()-start_time)/60.0))
