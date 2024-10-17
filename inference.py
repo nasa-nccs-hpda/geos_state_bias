@@ -56,7 +56,8 @@ def norm_prog(prog_file: str) -> xr.Dataset:
         prog_scaled[var] = (prog_data[var]-mins[var])/(maxs[var]-mins[var])
     return prog_scaled
 
-def scale_iau(predicts, min=-0.0036053888, max=0.0027486791):
+def scale_iau(predicts, min=-0.0009702732248491233, max=0.0008725484343296315):
+    # min=-0.0036053888, max=0.0027486791  ## Global min/max of 2000-2002 DJF
     return predicts*(max-min)+min
 
 def get_xys() -> np.ndarray:
