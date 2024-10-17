@@ -110,8 +110,13 @@ def main(prog_file, output_path):
     # Init output xr.dataset
     ct = prog_scaled.time.values[0]
     ds_out = create_ds(ct, levs)
-
-    for nz in levs[:1]:
+    base_name = os.path.basename(prog_file)
+    base_name = base_name.replace("prog", "iau")
+    ct_stamp = ct.astype("datetime64[us]").item().strftime("%Y%m%d_%H%Mz")
+    nt_stamp = (ct + np.timedelta64(3, 'h')).astype("datetime64[us]").item().strftime("%Y%m%d_%H%Mz")
+    base_name = base_name.replace(ct_stamp, nt_stamp)
+    out_file = os.path.join(output_path, base_name)
+    for nz in levs:
         lev_scaled = get_levs(nz)
         arrays = [prog_scaled[v].isel(lev=(nz-1)).to_numpy().squeeze() for v in prog_vars]
         arrays.extend([ps_scaled, lat_scaled, lon_scaled, lev_scaled])
@@ -122,8 +127,7 @@ def main(prog_file, output_path):
         y_hat = pred(nz, input_img)
         
         ds_out['DTDTML'].loc[dict(lev=nz)] = np.expand_dims(y_hat, axis=0)
-    print("OK")
-    exit()
+    ds_out.to_netcdf(path=out_file) 
     return
 
 if __name__ == "__main__":
