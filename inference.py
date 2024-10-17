@@ -56,7 +56,7 @@ def norm_prog(prog_file: str) -> xr.Dataset:
         prog_scaled[var] = (prog_data[var]-mins[var])/(maxs[var]-mins[var])
     return prog_scaled
 
-def scale_iau(predicts, min=-0.0009702732248491233, max=0.0008725484343296315):
+def scale_iau(predicts, min=-0.00300, max=0.00240):
     # min=-0.0036053888, max=0.0027486791  ## Global min/max of 2000-2002 DJF
     return predicts*(max-min)+min
 
@@ -81,7 +81,7 @@ def get_levs(nlev) -> np.ndarray:
 
 def gen_filename(current_time, prog_file):
     base_name = os.path.basename(prog_file)
-    base_name = base_name.replace("prog", "iau")
+    base_name = base_name.replace("prog", "iau_ml")
     ct_stamp = current_time.astype("datetime64[us]").item().strftime("%Y%m%d_%H%Mz")
     nt_stamp = (current_time + np.timedelta64(3, 'h')).astype("datetime64[us]").item().strftime("%Y%m%d_%H%Mz")
     base_name = base_name.replace(ct_stamp, nt_stamp)
