@@ -103,18 +103,11 @@ def pred(nlev, X):
     model.eval()
 
     y_preds = []
-    """
     for k in range(len(X)):
         tx = torch.unsqueeze(X[k,...],0)
         ty = model(tx).squeeze()
         y_preds.append(ty.detach().numpy())
     y_hat = re_build_pred(y_preds)
-    """
-    for k in [0, 2]:
-        tx = torch.unsqueeze(X[k,...],0)
-        ty = model(tx).squeeze()
-        y_preds.append(ty.detach().numpy())
-    y_hat = np.vstack(y_preds)
     return y_hat
 
 def main(prog_file, output_path):
