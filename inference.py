@@ -28,7 +28,7 @@ def merge_pred(arrs):
         channel_dimension=0,
         overlap=(0, 0, 90))
     merger = Merger(tiler=tiler_mask, window='triang')
-    for i in len(arrs):
+    for i in range(len(arrs)):
         merger.add(i, np.expand_dims(arrs[i], axis=0))
     base = merger.merge().squeeze()
     return base[:,:360]
