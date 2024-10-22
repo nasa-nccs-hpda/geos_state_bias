@@ -23,7 +23,7 @@ def re_build_pred(arrs):
 
 def merge_pred(arrs):
     tiler_mask = Tiler(
-        data_shape=(1, 181, 360),
+        data_shape=(1, 181, 450),
         tile_shape=(1, 181, 180),
         channel_dimension=0,
         overlap=(0, 0, 90))
