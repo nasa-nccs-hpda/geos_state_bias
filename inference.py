@@ -61,9 +61,32 @@ def norm_prog(prog_file: str) -> xr.Dataset:
     prog_vars = ['U', 'V', 'T', 'QV', 'QI', 'QL', 'QG', 'QR', 'QS', 'PS']
     prog_data = xr.open_dataset(prog_file)
     prog_data = prog_data[prog_vars]
-    maxs = prog_data.map(np.max)
-    mins = prog_data.map(np.min)
-    
+    #maxs = prog_data.map(np.max)
+    #mins = prog_data.map(np.min)
+    maxs = {
+            'U': 107.391922,
+            'V': 77.1762924,
+            'T': 313.841003,
+            'QV': 0.0208533276,
+            'QI': 0.000249900564,
+            'QL': 0.00173751824,
+            'QG': 0.000122462836,
+            'QR': 0.000318102102,
+            'QS': 0.000525470241,
+            'PS': 103488.039
+            }
+    mins = {
+            'U': -139.770218,
+            'V': -150.331345,
+            'T': 178.431381,
+            'QV': 1.58426859e-17,
+            'QI': 0.0,
+            'QL': 0.0,
+            'QG': 0.0,
+            'QR': 0.0,
+            'QS': 0.0,
+            'PS': 51069.2383,
+            }
     prog_scaled = xr.Dataset()
     for var in prog_data.data_vars:
         prog_scaled[var] = (prog_data[var]-mins[var])/(maxs[var]-mins[var])
