@@ -8,6 +8,19 @@ import argparse
 import time
 from tiler import Tiler, Merger
 
+def re_build_pred(arrs):
+    offset = 90
+    xsize = 180
+    base = np.zeros((181,450)) # HxW_extend
+    cnt = np.zeros((181,450))
+    
+    for i in range(len(arrs)):
+        base[:,i*offset:(i*offset+xsize)] += arrs[i]
+        cnt[:,i*offset:(i*offset+xsize)] += 1.
+    base[:,:offset] += base[:, -90:]
+    cnt[:, :offset] += 1
+    return base[:,:360]/cnt[:, :360]
+
 def merge_pred(arrs):
     tiler_mask = Tiler(
         data_shape=(1, 181, 360),
@@ -107,7 +120,8 @@ def pred(nlev, X):
         tx = torch.unsqueeze(X[k,...],0)
         ty = model(tx).squeeze()
         y_preds.append(ty.detach().numpy())
-    y_hat = merge_pred(y_preds)
+    y_hat = re_build_pred(y_preds)
+    #y_hat = merge_pred(y_preds)
     return y_hat
 
 def main(prog_file, output_path):
