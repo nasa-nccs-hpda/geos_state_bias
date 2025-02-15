@@ -1,0 +1,27 @@
+from processor import Processor
+import xarray as xr
+def main():
+    # Load sample data and call the predict function
+    # This part can be replaced with any data source
+    # For example, you can load data from a database, csv file, etc.
+    # You can also pass the data as an argument to the Processor class
+    # Each array should have shape of (lev, lat, lon), 
+    #  excpet for PS which has shape of (lat, lon)
+    ## Sample data load from a netcdf file
+    ds = xr.open_dataset("/discover/nobackup/jli30/data/geos_prog/REPLAY_M2-100KM-L181-AMIP-GFDL.geosgcm_prog.20021230_1500z.nc4")
+    variables = ['U', 'V', 'T', 'QV', 'QI', 'QL', 'QG', 'QR', 'QS', 'PS']
+    arrays = [ds[var].to_numpy().squeeze for var in variables]
+
+    ## Another argument needed is the path to the checkpoint directory
+    # ckpt_root_path = "/path/to/checkpoint/directory"
+    # If the path is static, you can hardcode it in the Processor class
+    ckpt_root_path = "/discover/nobackup/jli30/data/geos_prog/ckpt" 
+    ############################################################    
+    
+    # Processor class is responsible for making predictions
+    processor = Processor(ckpt_root_path=ckpt_root_path, *arrays)
+    outputs = processor.predict()
+    print(outputs.shape)
+
+if __name__ == "__main__":
+    main()
