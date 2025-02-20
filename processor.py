@@ -6,7 +6,7 @@ from utils.data_geos import geos_dataset
 from models.SmaAt_UNet import SmaAt_UNet
 
 class Processor:
-    def __init__(self, ckpt_root_path: str = None, *arrays: np.ndarray):
+    def __init__(self, ckpt_root_path: str, *arrays: np.ndarray):
         self.levs= [2,5,8,11,14,17,20,23,26,29,32,35,38,41,44,47,50,53,56,60,64,69,74,80,85,90,95,100,105,110,115,120,125,130,135,140,145,152,160,170,181]
         # Define the required keys
         self.keys = ['U', 'V', 'T', 'QV', 'QI', 'QL', 'QG', 'QR', 'QS', 'PS']
@@ -100,7 +100,7 @@ class Processor:
         with torch.no_grad():
             for k in range(input_img.size(0)):
                 y_pred = model(input_img[k].unsqueeze(0))
-                y_preds.append(y_pred)
+                y_preds.append(y_pred.numpy().squeeze())
         
         y_hat = self.re_build_pred(y_preds)
         return y_hat
@@ -108,13 +108,14 @@ class Processor:
     def predict(self):
         # Min-max scale the prognostic variables
         prog_scaled = self.prog_scale()
+        print("Scaled prognostic variables")
         lon_scaled, lat_scaled = self.get_xy()
-        ps_scaled = prog_scaled['PS'].to_numpy().squeeze()
-
+        ps_scaled = prog_scaled['PS']
+        print("Scaled 2D variables")
         out_arrs = []
         for nz in self.levs:
             lev_scaled = self.get_levs(nz)
-            arrays = [prog_scaled[key][nz] for key in self.keys]
+            arrays = [prog_scaled[key][nz-1] for key in self.keys[:-1]]
             arrays.extend([ps_scaled, lat_scaled, lon_scaled, lev_scaled])
             vx = np.stack(arrays, axis=0)
             input_img = torch.Tensor(vx)
